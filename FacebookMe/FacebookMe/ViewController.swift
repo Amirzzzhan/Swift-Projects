@@ -78,11 +78,7 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        if(section == 2) {
-            return "Favourites"
-        } else {
-            return ""
-        }
+        return (section == 2 ? "Favourites" : "")
     }
 }
 
