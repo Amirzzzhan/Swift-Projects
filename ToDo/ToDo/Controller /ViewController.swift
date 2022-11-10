@@ -7,16 +7,27 @@
 
 import UIKit
 
-class ViewController: UIViewController {
+final class ViewController: UIViewController {
     
     private var tableView: UITableView?
     
-    private let db = SQLiteDatabase.sharedInstance
+    private let db: SQLiteDatabase
+    
+    private var dataSource = [Task]()
+    
+    init(database: SQLiteDatabase) {
+        self.db = database
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     override func viewWillAppear(_ animated: Bool) {
-        db.tasksList()
-        Task.idCounter = db.tasksArray.last?.id ?? -1
-        Task.idCounter += 1
+        super.viewWillAppear(false)
+        
+        dataSource = db.getTasksList()
         tableView?.reloadData()
     }
     
@@ -39,7 +50,7 @@ class ViewController: UIViewController {
         
         view.addSubview(safeTableView)
         
-        safeTableView.register(TaskTableViewCell.self, forCellReuseIdentifier: TaskTableViewCell.identifier)
+        safeTableView.register(TaskTableViewCell.self, forCellReuseIdentifier: TaskTableViewCell.className)
         safeTableView.dataSource = self
         safeTableView.delegate = self
     }
@@ -52,14 +63,14 @@ class ViewController: UIViewController {
     
     // MARK: - Add a new task
     @objc func addPressed() {
-        let taskVC = TaskViewController()
+        let taskVC = TaskViewController(database: db)
         navigationController?.pushViewController(taskVC, animated: true)
     }
     
     // MARK: - Delete table view cell after swipe action
     func handleMoveToTrash(task: Task) {
         db.deleteRow(delTask: task)
-        db.tasksList()
+        dataSource = db.getTasksList()
         tableView?.reloadData()
     }
 }
@@ -71,11 +82,11 @@ extension ViewController: UITableViewDataSource, UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: TaskTableViewCell.identifier, for: indexPath) as! TaskTableViewCell
+        let cell = tableView.dequeueReusableCell(withIdentifier: TaskTableViewCell.className, for: indexPath) as! TaskTableViewCell
         
-        cell.taskLabel.text = db.tasksArray[indexPath.row].task
-        cell.addressLabel.text = db.tasksArray[indexPath.row].address
-        cell.dateLabel.text = db.tasksArray[indexPath.row].date
+        cell.taskLabel.text = dataSource[indexPath.row].task
+        cell.addressLabel.text = dataSource[indexPath.row].address
+        cell.dateLabel.text = dataSource[indexPath.row].date
         
         return cell
     }
@@ -87,7 +98,7 @@ extension ViewController: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         let delete = UIContextualAction(style: .destructive, title: "Delete") {
             [weak self] (action, view, completionHandler) in
-            self?.handleMoveToTrash(task: (self?.db.tasksArray[indexPath.row])!)
+            self?.handleMoveToTrash(task: (self?.dataSource[indexPath.row])!)
             completionHandler(true)
         }
         delete.backgroundColor = .systemRed

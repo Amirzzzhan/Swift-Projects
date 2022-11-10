@@ -8,8 +8,6 @@
 import Foundation
 
 struct Task {
-    // Ask about this
-    static var idCounter: Int = 0
     
     let id: Int
     let task: String

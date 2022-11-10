@@ -14,11 +14,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let sceneWindow = (scene as? UIWindowScene) else { return }
         
-        window?.windowScene = sceneWindow
-        window?.makeKeyAndVisible()
-        let controller = ViewController()
+        window = UIWindow(windowScene: sceneWindow)
+        let database = SQLiteDatabase()
+        let controller = ViewController(database: database)
         let navController = UINavigationController(rootViewController: controller)
         window?.rootViewController = navController
+        window?.makeKeyAndVisible()
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {

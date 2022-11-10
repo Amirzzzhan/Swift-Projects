@@ -8,20 +8,19 @@
 import Foundation
 import SQLite
 
-class SQLiteDatabase {
-    static var sharedInstance = SQLiteDatabase()
+final class SQLiteDatabase {
     
-    var database: Connection!
+    private var database: Connection!
     
-    let taskTable = Table("tasks")
-    let id = Expression<Int>("id")
-    let task = Expression<String>("task")
-    let address = Expression<String>("address")
-    let date = Expression<String>("date")
+    private let taskTable = Table("tasks")
+    private let id = Expression<Int>("id")
+    private let task = Expression<String>("task")
+    private let address = Expression<String>("address")
+    private let date = Expression<String>("date")
     
-    var tasksArray = [Task]()
+    private var tasksArray = [Task]()
     
-    private init() {
+    init() {
         do {
             let documentDirectory = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
             let fileUrl = documentDirectory.appendingPathComponent("tasks").appendingPathExtension("sqlite3")
@@ -32,7 +31,18 @@ class SQLiteDatabase {
         }
     }
     
+    func isTableExists() -> Bool {
+        do {
+            let _ = try database.scalar(taskTable.count)
+            return true
+        } catch {
+            return false
+        }
+    }
+    
     func createTable() {
+        if isTableExists() { return }
+        
         let createTable = taskTable.create { table in
             table.column(id, primaryKey: true)
             table.column(task)
@@ -52,7 +62,6 @@ class SQLiteDatabase {
         
         do {
             try database.run(insertRow)
-            Task.idCounter += 1
         } catch {
             print(error)
         }
@@ -68,7 +77,7 @@ class SQLiteDatabase {
         }
     }
     
-    func tasksList() {
+    func getTasksList() -> [Task] {
         tasksArray = [Task]()
         do {
             let tasks = try database.prepare(taskTable)
@@ -78,6 +87,7 @@ class SQLiteDatabase {
         } catch {
             print(error)
         }
+        return tasksArray
     }
     
     func tasksCount() -> Int {
