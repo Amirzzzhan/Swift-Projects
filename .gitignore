@@ -1,1 +1,3 @@
-*.Todo/Pods/
+Podfile.lock
+Pods
+*.xcworkspace
